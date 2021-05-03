@@ -49,30 +49,40 @@ void setup() {
 
   outerRing.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   outerRing.show();            // Turn OFF all pixels ASAP
-  outerRing.setBrightness(50); // Set BRIGHTNESS to about 1/5 (max = 255)
+  outerRing.setBrightness(10); // Set BRIGHTNESS to about 1/5 (max = 255)
   innerRing.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   innerRing.show();            // Turn OFF all pixels ASAP
-  innerRing.setBrightness(50); // Set BRIGHTNESS to about 1/5 (max = 255)
+  innerRing.setBrightness(10); // Set BRIGHTNESS to about 1/5 (max = 255)
 }
 
 
 // loop() function -- runs repeatedly as long as board is on ---------------
 
 void loop() {
-  // Fill along the length of the strip in various colors...
-  //colorWipe(strip.Color(255,   0,   0), 50); // Red
- // colorWipe(strip.Color(  0, 255,   0), 50); // Green
-  //colorWipe(strip.Color(  0,   0, 255), 50); // Blue
+//  outerTheaterChase(outerRing.Color(127, 127, 127), 50); // White, half brightness  
+//  innerTheaterChase(innerRing.Color(127, 127, 127), 50); // White, half brightness
 
-  // Do a theater marquee effect in various colors...
-  outerTheaterChase(outerRing.Color(127, 127, 127), 50); // White, half brightness  
-  innerTheaterChase(innerRing.Color(127, 127, 127), 50); // White, half brightness
-  //theaterChase(strip.Color(127,   0,   0), 50); // Red, half brightness
-  //theaterChase(strip.Color(  0,   0, 127), 50); // Blue, half brightness
-
-  outerRainbow(10);             // Flowing rainbow cycle along the whole strip
-  innerRainbow(10);             // Flowing rainbow cycle along the whole strip
+  rainbow(10);             // Flowing rainbow cycle along the whole strip
+//  innerRainbow(10);             // Flowing rainbow cycle along the whole strip
   //theaterChaseRainbow(50); // Rainbow-enhanced theaterChase variant
+}
+
+// Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
+
+void rainbow(int wait) {
+  for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
+    for(int i=0; i<outerRing.numPixels(); i++) {
+      int pixelHue = firstPixelHue + (i * 65536L / outerRing.numPixels());
+      outerRing.setPixelColor(i, outerRing.gamma32(outerRing.ColorHSV(pixelHue)));
+    }
+    for(int i=0; i<innerRing.numPixels(); i++) {
+      int pixelHue = firstPixelHue + (i * 65536L / innerRing.numPixels());
+      innerRing.setPixelColor(i, innerRing.gamma32(innerRing.ColorHSV(pixelHue)));
+    }
+    outerRing.show(); // Update strip with new contents
+    innerRing.show(); // Update strip with new contents
+    delay(wait);  // Pause for a moment
+  }
 }
 
 
@@ -94,80 +104,80 @@ void loop() {
 // Theater-marquee-style chasing lights. Pass in a color (32-bit value,
 // a la strip.Color(r,g,b) as mentioned above), and a delay time (in ms)
 // between frames.
-void outerTheaterChase(uint32_t color, int wait) {
-  for(int a=0; a<10; a++) {  // Repeat 10 times...
-    for(int b=0; b<3; b++) { //  'b' counts from 0 to 2...
-      outerRing.clear();         //   Set all pixels in RAM to 0 (off)
-      // 'c' counts up from 'b' to end of strip in steps of 3...
-      for(int c=b; c<outerRing.numPixels(); c += 3) {
-        outerRing.setPixelColor(c, color); // Set pixel 'c' to value 'color'
-      }
-      outerRing.show(); // Update strip with new contents
-      delay(wait);  // Pause for a moment
-    }
-  }
-}
+//void outerTheaterChase(uint32_t color, int wait) {
+//  for(int a=0; a<10; a++) {  // Repeat 10 times...
+//    for(int b=0; b<3; b++) { //  'b' counts from 0 to 2...
+//      outerRing.clear();         //   Set all pixels in RAM to 0 (off)
+//      // 'c' counts up from 'b' to end of strip in steps of 3...
+//      for(int c=b; c<outerRing.numPixels(); c += 3) {
+//        outerRing.setPixelColor(c, color); // Set pixel 'c' to value 'color'
+//      }
+//      outerRing.show(); // Update strip with new contents
+//      delay(wait);  // Pause for a moment
+//    }
+//  }
+//}
+//
+//void innerTheaterChase(uint32_t color, int wait) {
+//  for(int a=0; a<10; a++) {  // Repeat 10 times...
+//    for(int b=0; b<3; b++) { //  'b' counts from 0 to 2...
+//      innerRing.clear();         //   Set all pixels in RAM to 0 (off)
+//      // 'c' counts up from 'b' to end of strip in steps of 3...
+//      for(int c=b; c<innerRing.numPixels(); c += 3) {
+//        innerRing.setPixelColor(c, color); // Set pixel 'c' to value 'color'
+//      }
+//      innerRing.show(); // Update strip with new contents
+//      delay(wait);  // Pause for a moment
+//    }
+//  }
+//}
 
-void innerTheaterChase(uint32_t color, int wait) {
-  for(int a=0; a<10; a++) {  // Repeat 10 times...
-    for(int b=0; b<3; b++) { //  'b' counts from 0 to 2...
-      innerRing.clear();         //   Set all pixels in RAM to 0 (off)
-      // 'c' counts up from 'b' to end of strip in steps of 3...
-      for(int c=b; c<innerRing.numPixels(); c += 3) {
-        innerRing.setPixelColor(c, color); // Set pixel 'c' to value 'color'
-      }
-      innerRing.show(); // Update strip with new contents
-      delay(wait);  // Pause for a moment
-    }
-  }
-}
-
-// Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
-void outerRainbow(int wait) {
-  // Hue of first pixel runs 5 complete loops through the color wheel.
-  // Color wheel has a range of 65536 but it's OK if we roll over, so
-  // just count from 0 to 5*65536. Adding 256 to firstPixelHue each time
-  // means we'll make 5*65536/256 = 1280 passes through this outer loop:
-  for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
-    for(int i=0; i<outerRing.numPixels(); i++) { // For each pixel in strip...
-      // Offset pixel hue by an amount to make one full revolution of the
-      // color wheel (range of 65536) along the length of the strip
-      // (strip.numPixels() steps):
-      int pixelHue = firstPixelHue + (i * 65536L / outerRing.numPixels());
-      // strip.ColorHSV() can take 1 or 3 arguments: a hue (0 to 65535) or
-      // optionally add saturation and value (brightness) (each 0 to 255).
-      // Here we're using just the single-argument hue variant. The result
-      // is passed through strip.gamma32() to provide 'truer' colors
-      // before assigning to each pixel:
-      outerRing.setPixelColor(i, outerRing.gamma32(outerRing.ColorHSV(pixelHue)));
-    }
-    outerRing.show(); // Update strip with new contents
-    delay(wait);  // Pause for a moment
-  }
-}
-
-void innerRainbow(int wait) {
-  // Hue of first pixel runs 5 complete loops through the color wheel.
-  // Color wheel has a range of 65536 but it's OK if we roll over, so
-  // just count from 0 to 5*65536. Adding 256 to firstPixelHue each time
-  // means we'll make 5*65536/256 = 1280 passes through this outer loop:
-  for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
-    for(int i=0; i<innerRing.numPixels(); i++) { // For each pixel in strip...
-      // Offset pixel hue by an amount to make one full revolution of the
-      // color wheel (range of 65536) along the length of the strip
-      // (strip.numPixels() steps):
-      int pixelHue = firstPixelHue + (i * 65536L / innerRing.numPixels());
-      // strip.ColorHSV() can take 1 or 3 arguments: a hue (0 to 65535) or
-      // optionally add saturation and value (brightness) (each 0 to 255).
-      // Here we're using just the single-argument hue variant. The result
-      // is passed through strip.gamma32() to provide 'truer' colors
-      // before assigning to each pixel:
-      innerRing.setPixelColor(i, innerRing.gamma32(innerRing.ColorHSV(pixelHue)));
-    }
-    innerRing.show(); // Update strip with new contents
-    delay(wait);  // Pause for a moment
-  }
-}
+//// Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
+//void outerRainbow(int wait) {
+//  // Hue of first pixel runs 5 complete loops through the color wheel.
+//  // Color wheel has a range of 65536 but it's OK if we roll over, so
+//  // just count from 0 to 5*65536. Adding 256 to firstPixelHue each time
+//  // means we'll make 5*65536/256 = 1280 passes through this outer loop:
+//  for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
+//    for(int i=0; i<outerRing.numPixels(); i++) { // For each pixel in strip...
+//      // Offset pixel hue by an amount to make one full revolution of the
+//      // color wheel (range of 65536) along the length of the strip
+//      // (strip.numPixels() steps):
+//      int pixelHue = firstPixelHue + (i * 65536L / outerRing.numPixels());
+//      // strip.ColorHSV() can take 1 or 3 arguments: a hue (0 to 65535) or
+//      // optionally add saturation and value (brightness) (each 0 to 255).
+//      // Here we're using just the single-argument hue variant. The result
+//      // is passed through strip.gamma32() to provide 'truer' colors
+//      // before assigning to each pixel:
+//      outerRing.setPixelColor(i, outerRing.gamma32(outerRing.ColorHSV(pixelHue)));
+//    }
+//    outerRing.show(); // Update strip with new contents
+//    delay(wait);  // Pause for a moment
+//  }
+//}
+//
+//void innerRainbow(int wait) {
+//  // Hue of first pixel runs 5 complete loops through the color wheel.
+//  // Color wheel has a range of 65536 but it's OK if we roll over, so
+//  // just count from 0 to 5*65536. Adding 256 to firstPixelHue each time
+//  // means we'll make 5*65536/256 = 1280 passes through this outer loop:
+//  for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
+//    for(int i=0; i<innerRing.numPixels(); i++) { // For each pixel in strip...
+//      // Offset pixel hue by an amount to make one full revolution of the
+//      // color wheel (range of 65536) along the length of the strip
+//      // (strip.numPixels() steps):
+//      int pixelHue = firstPixelHue + (i * 65536L / innerRing.numPixels());
+//      // strip.ColorHSV() can take 1 or 3 arguments: a hue (0 to 65535) or
+//      // optionally add saturation and value (brightness) (each 0 to 255).
+//      // Here we're using just the single-argument hue variant. The result
+//      // is passed through strip.gamma32() to provide 'truer' colors
+//      // before assigning to each pixel:
+//      innerRing.setPixelColor(i, innerRing.gamma32(innerRing.ColorHSV(pixelHue)));
+//    }
+//    innerRing.show(); // Update strip with new contents
+//    delay(wait);  // Pause for a moment
+//  }
+//}
 
 // Rainbow-enhanced theater marquee. Pass delay time (in ms) between frames.
 //void theaterChaseRainbow(int wait) {
