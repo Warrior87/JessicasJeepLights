@@ -77,6 +77,7 @@ void rainbow(int wait) {
     }
     for(int i=0; i<innerRing.numPixels(); i++) {
       int pixelHue = firstPixelHue + (i * 65536L / innerRing.numPixels());
+      //innerRing.setPixelColor((innerRing.numPixels() - i - 1), innerRing.gamma32(innerRing.ColorHSV(pixelHue)));    //reverses the inner ring direction
       innerRing.setPixelColor(i, innerRing.gamma32(innerRing.ColorHSV(pixelHue)));
     }
     outerRing.show(); // Update strip with new contents
