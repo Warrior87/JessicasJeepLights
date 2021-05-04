@@ -24,23 +24,30 @@
 Adafruit_NeoPixel outerRing(outerRingLEDCount, outerRingPin, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel innerRing(innerRingLEDCount, innerRingPin, NEO_GRB + NEO_KHZ800);
 
+unsigned long currentTime;
 unsigned long rainbow_lastServiceTime;
 unsigned long rainbow_serviceInterval = 10;
 long firstPixelHue;
 unsigned long theaterChase_lastServiceTime;
-unsigned long theaterChase_serviceInterval = 25;
+unsigned long theaterChase_serviceInterval = 50;
 int innerTheaterChase_a;
 int innerTheaterChase_b;
-byte innerRingState = 1;
-byte outerRingState;
+int outerTheaterChase_a;
+int outerTheaterChase_b;
+byte innerRingState = 0;
+byte outerRingState = 3;
 unsigned long cycleFeature_lastServiceTime;
 unsigned long cycleFeature_serviceInterval = 2000;
+
+uint32_t blue = outerRing.gamma32(outerRing.ColorHSV(43690));
+uint32_t red = outerRing.gamma32(outerRing.ColorHSV(0));
 
 /*
  * state table:
  * 0 - off
  * 1 - rainbow CCW
  * 2 - rainbow CW
+ * 3 - theater chase
  */
 
 void setup() {
@@ -54,6 +61,7 @@ void setup() {
 
 
 void loop() {
+  currentTime = millis();
 //  outerTheaterChase(outerRing.Color(127, 127, 127), 50); // White, half brightness  
 //  innerTheaterChase(innerRing.Color(127, 127, 127), 50); // White, half brightness
 
@@ -61,42 +69,43 @@ void loop() {
   //outerRainbow(10);             // Flowing rainbow cycle along the whole strip
   //theaterChaseRainbow(50); // Rainbow-enhanced theaterChase variant
   if(outerRingState == 0){
-    for(int i=0; i<outerRing.numPixels(); i++) { // For each pixel in strip...
-      outerRing.setPixelColor(i, 0);         //  Set pixel's color (in RAM)
-    }
+    outerRing.clear();
     outerRing.show();
   }
   if(innerRingState == 0){
-    for(int i=0; i<innerRing.numPixels(); i++) { // For each pixel in strip...
-      innerRing.setPixelColor(i, 0);         //  Set pixel's color (in RAM)
-    }
+    innerRing.clear();
     innerRing.show();
   }
 
   //rainbow
-  if((millis() - rainbow_lastServiceTime) >= rainbow_serviceInterval){
-    rainbow_lastServiceTime = millis();
-    rainbow();
-  }
-
-  //cycle (demo mode 1)
-  if((millis() - cycleFeature_lastServiceTime) >= cycleFeature_serviceInterval){
-    cycleFeature_lastServiceTime = millis();
-    innerRingState++;
-    outerRingState++;
-    if(innerRingState >= 3){
-      innerRingState = 0;
-    }
-    if(outerRingState >= 3){
-      outerRingState = 0;
-    }
-  }
-
-  
-//  if((millis() - theaterChase_lastServiceTime) >= theaterChase_serviceInterval){
-//    theaterChase_lastServiceTime = millis();
-//    innerTheaterChase(innerRing.Color(127, 127, 127)); // White, half brightness
+//  if((currentTime - rainbow_lastServiceTime) >= rainbow_serviceInterval){
+//    rainbow_lastServiceTime = currentTime;
+//    rainbow();
 //  }
+
+//  cycle (demo mode 1)
+//  if((currentTime - cycleFeature_lastServiceTime) >= cycleFeature_serviceInterval){
+//    cycleFeature_lastServiceTime = currentTime;
+//    innerRingState++;
+//    outerRingState++;
+//    if(innerRingState >= 4){
+//      innerRingState = 0;
+//    }
+//    if(outerRingState >= 4){
+//      outerRingState = 0;
+//    }
+//  }
+
+  //theater chase
+  if((currentTime - theaterChase_lastServiceTime) >= theaterChase_serviceInterval){
+    theaterChase_lastServiceTime = currentTime;
+    if(innerRingState == 3){
+      innerTheaterChase(innerRing.Color(127, 127, 127)); // White, half brightness
+    }
+    if(outerRingState == 3){
+      outerTheaterChase(innerRing.Color(127, 127, 127)); // White, half brightness
+    }
+  }
 }
 
 void rainbow() {
@@ -197,6 +206,28 @@ void innerTheaterChase(uint32_t color) {
   }
   else{
     innerTheaterChase_a=0;
+  }
+}
+
+void outerTheaterChase(uint32_t color) {
+  if(outerTheaterChase_a<10) {  // Repeat 10 times...
+    if(outerTheaterChase_b<3) { //  'b' counts from 0 to 2...
+      outerRing.clear();         //   Set all pixels in RAM to 0 (off)
+      // 'c' counts up from 'b' to end of strip in steps of 3...
+      for(int c=outerTheaterChase_b; c<outerRing.numPixels(); c += 3) {
+        outerRing.setPixelColor(c, color); // Set pixel 'c' to value 'color'
+      }
+      outerRing.show(); // Update strip with new contents
+      //delay(wait);  // Pause for a moment
+      outerTheaterChase_b++;
+    }
+    else{
+      outerTheaterChase_b=0;
+    }
+    outerTheaterChase_a++;
+  }
+  else{
+    outerTheaterChase_a=0;
   }
 }
 
