@@ -15,74 +15,133 @@
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 
-// Which pin on the Arduino is connected to the NeoPixels?
-// On a Trinket or Gemma we suggest changing this to 1:
 #define outerRingPin    2
 #define innerRingPin    3
 
-// How many NeoPixels are attached to the Arduino?
 #define outerRingLEDCount 24
 #define innerRingLEDCount 16
 
-// Declare our NeoPixel strip object:
 Adafruit_NeoPixel outerRing(outerRingLEDCount, outerRingPin, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel innerRing(innerRingLEDCount, innerRingPin, NEO_GRB + NEO_KHZ800);
-// Argument 1 = Number of pixels in NeoPixel strip
-// Argument 2 = Arduino pin number (most are valid)
-// Argument 3 = Pixel type flags, add together as needed:
-//   NEO_KHZ800  800 KHz bitstream (most NeoPixel products w/WS2812 LEDs)
-//   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
-//   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
-//   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-//   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
 
+unsigned long rainbow_lastServiceTime;
+unsigned long rainbow_serviceInterval = 10;
+long firstPixelHue;
+unsigned long theaterChase_lastServiceTime;
+unsigned long theaterChase_serviceInterval = 25;
+int innerTheaterChase_a;
+int innerTheaterChase_b;
+byte innerRingState = 1;
+byte outerRingState;
+unsigned long cycleFeature_lastServiceTime;
+unsigned long cycleFeature_serviceInterval = 2000;
 
-// setup() function -- runs once at startup --------------------------------
+/*
+ * state table:
+ * 0 - off
+ * 1 - rainbow CCW
+ * 2 - rainbow CW
+ */
 
 void setup() {
-  // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
-  // Any other board, you can remove this part (but no harm leaving it):
-#if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
-  clock_prescale_set(clock_div_1);
-#endif
-  // END of Trinket-specific code.
-
   outerRing.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   outerRing.show();            // Turn OFF all pixels ASAP
-  outerRing.setBrightness(10); // Set BRIGHTNESS to about 1/5 (max = 255)
+  outerRing.setBrightness(10); // Set BRIGHTNESS (max = 255)
   innerRing.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   innerRing.show();            // Turn OFF all pixels ASAP
-  innerRing.setBrightness(10); // Set BRIGHTNESS to about 1/5 (max = 255)
+  innerRing.setBrightness(10); // Set BRIGHTNESS (max = 255)
 }
 
-
-// loop() function -- runs repeatedly as long as board is on ---------------
 
 void loop() {
 //  outerTheaterChase(outerRing.Color(127, 127, 127), 50); // White, half brightness  
 //  innerTheaterChase(innerRing.Color(127, 127, 127), 50); // White, half brightness
 
-  rainbow(10);             // Flowing rainbow cycle along the whole strip
-//  innerRainbow(10);             // Flowing rainbow cycle along the whole strip
+  //rainbow(10);             // Flowing rainbow cycle along the whole strip
+  //outerRainbow(10);             // Flowing rainbow cycle along the whole strip
   //theaterChaseRainbow(50); // Rainbow-enhanced theaterChase variant
+  if(outerRingState == 0){
+    for(int i=0; i<outerRing.numPixels(); i++) { // For each pixel in strip...
+      outerRing.setPixelColor(i, 0);         //  Set pixel's color (in RAM)
+    }
+    outerRing.show();
+  }
+  if(innerRingState == 0){
+    for(int i=0; i<innerRing.numPixels(); i++) { // For each pixel in strip...
+      innerRing.setPixelColor(i, 0);         //  Set pixel's color (in RAM)
+    }
+    innerRing.show();
+  }
+
+  //rainbow
+  if((millis() - rainbow_lastServiceTime) >= rainbow_serviceInterval){
+    rainbow_lastServiceTime = millis();
+    rainbow();
+  }
+
+  //cycle (demo mode 1)
+  if((millis() - cycleFeature_lastServiceTime) >= cycleFeature_serviceInterval){
+    cycleFeature_lastServiceTime = millis();
+    innerRingState++;
+    outerRingState++;
+    if(innerRingState >= 3){
+      innerRingState = 0;
+    }
+    if(outerRingState >= 3){
+      outerRingState = 0;
+    }
+  }
+
+  
+//  if((millis() - theaterChase_lastServiceTime) >= theaterChase_serviceInterval){
+//    theaterChase_lastServiceTime = millis();
+//    innerTheaterChase(innerRing.Color(127, 127, 127)); // White, half brightness
+//  }
 }
 
-// Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
-
-void rainbow(int wait) {
-  for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
-    for(int i=0; i<outerRing.numPixels(); i++) {
-      int pixelHue = firstPixelHue + (i * 65536L / outerRing.numPixels());
-      outerRing.setPixelColor(i, outerRing.gamma32(outerRing.ColorHSV(pixelHue)));
-    }
-    for(int i=0; i<innerRing.numPixels(); i++) {
-      int pixelHue = firstPixelHue + (i * 65536L / innerRing.numPixels());
-      //innerRing.setPixelColor((innerRing.numPixels() - i - 1), innerRing.gamma32(innerRing.ColorHSV(pixelHue)));    //reverses the inner ring direction
-      innerRing.setPixelColor(i, innerRing.gamma32(innerRing.ColorHSV(pixelHue)));
-    }
+void rainbow() {
+  if(firstPixelHue < 5*65536) {
+    
+    //for outer ring rainbow CCW
+    if(outerRingState == 1){
+      for(int i=0; i<outerRing.numPixels(); i++) {
+        int pixelHue = firstPixelHue + (i * 65536L / outerRing.numPixels());
+        outerRing.setPixelColor(i, outerRing.gamma32(outerRing.ColorHSV(pixelHue)));
+      }
     outerRing.show(); // Update strip with new contents
+    }
+    
+    //for outer ring rainbow CW
+    if(outerRingState == 2){
+      for(int i=0; i<outerRing.numPixels(); i++) {
+        int pixelHue = firstPixelHue + (i * 65536L / outerRing.numPixels());
+        outerRing.setPixelColor((outerRing.numPixels() - i - 1), outerRing.gamma32(outerRing.ColorHSV(pixelHue)));
+      }
+    outerRing.show(); // Update strip with new contents
+    }
+    
+    //for inner ring rainbow CCW
+    if(innerRingState == 1){
+      for(int i=0; i<innerRing.numPixels(); i++) {
+        int pixelHue = firstPixelHue + (i * 65536L / innerRing.numPixels());
+        innerRing.setPixelColor((innerRing.numPixels() - i - 1), innerRing.gamma32(innerRing.ColorHSV(pixelHue)));    //reverses the inner ring direction
+      }
     innerRing.show(); // Update strip with new contents
-    delay(wait);  // Pause for a moment
+    }
+    
+    //for inner ring rainbow CW
+    if(innerRingState == 2){
+      for(int i=0; i<innerRing.numPixels(); i++) {
+        int pixelHue = firstPixelHue + (i * 65536L / innerRing.numPixels());
+        innerRing.setPixelColor(i, innerRing.gamma32(innerRing.ColorHSV(pixelHue)));
+      }
+    innerRing.show(); // Update strip with new contents
+    }
+    
+    firstPixelHue += 256;
+  }
+  else{
+    firstPixelHue = 0;
   }
 }
 
@@ -119,19 +178,27 @@ void rainbow(int wait) {
 //  }
 //}
 //
-//void innerTheaterChase(uint32_t color, int wait) {
-//  for(int a=0; a<10; a++) {  // Repeat 10 times...
-//    for(int b=0; b<3; b++) { //  'b' counts from 0 to 2...
-//      innerRing.clear();         //   Set all pixels in RAM to 0 (off)
-//      // 'c' counts up from 'b' to end of strip in steps of 3...
-//      for(int c=b; c<innerRing.numPixels(); c += 3) {
-//        innerRing.setPixelColor(c, color); // Set pixel 'c' to value 'color'
-//      }
-//      innerRing.show(); // Update strip with new contents
-//      delay(wait);  // Pause for a moment
-//    }
-//  }
-//}
+void innerTheaterChase(uint32_t color) {
+  if(innerTheaterChase_a<10) {  // Repeat 10 times...
+    if(innerTheaterChase_b<3) { //  'b' counts from 0 to 2...
+      innerRing.clear();         //   Set all pixels in RAM to 0 (off)
+      // 'c' counts up from 'b' to end of strip in steps of 3...
+      for(int c=innerTheaterChase_b; c<innerRing.numPixels(); c += 3) {
+        innerRing.setPixelColor(c, color); // Set pixel 'c' to value 'color'
+      }
+      innerRing.show(); // Update strip with new contents
+      //delay(wait);  // Pause for a moment
+      innerTheaterChase_b++;
+    }
+    else{
+      innerTheaterChase_b=0;
+    }
+    innerTheaterChase_a++;
+  }
+  else{
+    innerTheaterChase_a=0;
+  }
+}
 
 //// Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
 //void outerRainbow(int wait) {
