@@ -38,7 +38,7 @@ Adafruit_NeoPixel leftStrip(leftStripLEDCount, leftStripPin, NEO_GRB + NEO_KHZ80
 
 unsigned long currentTime;
 unsigned long rainbow_lastServiceTime;
-unsigned long rainbow_serviceInterval = 10;
+unsigned long rainbow_serviceInterval = 1;
 long firstPixelHue;
 unsigned long theaterChase_lastServiceTime;
 unsigned long theaterChase_serviceInterval = 50;
@@ -52,6 +52,8 @@ byte innerRightRingState = 2;
 byte outerRightRingState = 2;
 unsigned long cycleFeature_lastServiceTime;
 unsigned long cycleFeature_serviceInterval = 2000;
+byte stripBrightness = 200;
+byte ringBrightness = 20;
 
 uint32_t blue = outerLeftRing.gamma32(outerLeftRing.ColorHSV(43690));
 uint32_t red = outerLeftRing.gamma32(outerLeftRing.ColorHSV(0));
@@ -67,22 +69,22 @@ uint32_t red = outerLeftRing.gamma32(outerLeftRing.ColorHSV(0));
 void setup() {
   outerLeftRing.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   outerLeftRing.show();            // Turn OFF all pixels ASAP
-  outerLeftRing.setBrightness(10); // Set BRIGHTNESS (max = 255)
+  outerLeftRing.setBrightness(ringBrightness); // Set BRIGHTNESS (max = 255)
   innerLeftRing.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   innerLeftRing.show();            // Turn OFF all pixels ASAP
-  innerLeftRing.setBrightness(10); // Set BRIGHTNESS (max = 255)
+  innerLeftRing.setBrightness(ringBrightness); // Set BRIGHTNESS (max = 255)
   outerRightRing.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   outerRightRing.show();            // Turn OFF all pixels ASAP
-  outerRightRing.setBrightness(10); // Set BRIGHTNESS (max = 255)
+  outerRightRing.setBrightness(ringBrightness); // Set BRIGHTNESS (max = 255)
   innerRightRing.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   innerRightRing.show();            // Turn OFF all pixels ASAP
-  innerRightRing.setBrightness(10); // Set BRIGHTNESS (max = 255)
+  innerRightRing.setBrightness(ringBrightness); // Set BRIGHTNESS (max = 255)
   leftStrip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   leftStrip.show();            // Turn OFF all pixels ASAP
-  leftStrip.setBrightness(10); // Set BRIGHTNESS (max = 255)
+  leftStrip.setBrightness(stripBrightness); // Set BRIGHTNESS (max = 255)
   rightStrip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   rightStrip.show();            // Turn OFF all pixels ASAP
-  rightStrip.setBrightness(10); // Set BRIGHTNESS (max = 255)
+  rightStrip.setBrightness(stripBrightness); // Set BRIGHTNESS (max = 255)
 }
 
 
